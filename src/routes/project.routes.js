@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middlewares/upload");
 
+const upload = require("../middlewares/upload");
 const {
   createProject,
   getProjects,
@@ -9,11 +9,17 @@ const {
   deleteProject,
 } = require("../controllers/project.controller");
 
+// ✅ TEST ROUTE (IMPORTANT FOR DEBUGGING)
+router.get("/test", (req, res) => {
+  res.json({ message: "Projects route working" });
+});
+
+// ✅ ROUTES
 router.get("/", getProjects);
 
 router.post(
   "/",
-  upload.array("images", 10), // ⬅️ images key from Postman
+  upload.array("images", 10),
   createProject
 );
 
@@ -25,4 +31,4 @@ router.put(
 
 router.delete("/:id", deleteProject);
 
-module.exports = router;
+module.exports = router; // ❗ MUST EXIST
