@@ -4,7 +4,12 @@ const { v4: uuid } = require("uuid");
 /* CREATE PROJECT */
 const createProject = async (req, res) => {
   try {
-    const { title, description, location, completedDate } = req.body;
+    const {
+      title = null,
+      description = null,
+      location = null,
+      completedDate = null,
+    } = req.body || {};
 
     const project = await Project.create({
       title,
@@ -13,21 +18,22 @@ const createProject = async (req, res) => {
       completedDate,
     });
 
-    // If images exist
-    if (req.files && req.files.length > 0) {
+    if (req.files?.length) {
       for (const file of req.files) {
         await ProjectImage.create({
-          imageUrl: file.originalname, // later replace with S3 URL
+          imageUrl: file.originalname,
           ProjectId: project.id,
         });
       }
     }
 
-    res.status(201).json({ success: true, data: project });
+    return res.status(201).json({ success: true, data: project });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    return res.status(500).json({ error: err.message });
   }
 };
+
 
 module.exports = {
   createProject,
