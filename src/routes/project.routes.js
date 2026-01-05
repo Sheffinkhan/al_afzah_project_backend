@@ -1,12 +1,11 @@
-const router = require("express").Router();
-const upload = require("../middlewares/upload");
-const controller = require("../controllers/project.controller");
+const express = require("express");
+const router = express.Router();
+const projectController = require("../controllers/project.controller");
 
-router.post("/", upload.array("images", 10), controller.createProject);
-router.get("/", controller.getProjects);
-
-router.put("/:id", upload.array("images", 10), controller.updateProject);
-router.delete("/:id", controller.deleteProject);
-router.delete("/:id/images/:imageId", controller.deleteProjectImage);
+router.get("/", projectController.getProjects);
+router.post("/", projectController.createProject);
+router.put("/:id", projectController.updateProject);
+router.delete("/:id", projectController.deleteProject);
+router.delete("/image/:imageId", projectController.deleteProjectImage);
 
 module.exports = router;

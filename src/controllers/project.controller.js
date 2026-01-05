@@ -1,53 +1,81 @@
 const { Project, ProjectImage } = require("../models");
-const s3 = require("../config/s3");
-const { PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuid } = require("uuid");
 
 /* CREATE PROJECT */
-exports.createProject = async (req, res) => {
+const createProject = async (req, res) => {
   try {
     const project = await Project.create(req.body);
-
-    for (const file of req.files) {
-      const fileName = `${uuid()}-${file.originalname}`;
-
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: process.env.AWS_S3_BUCKET_PROJECTS,
-          Key: fileName,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-        })
-      );
-
-      await ProjectImage.create({
-        imageUrl: fileName,
-        ProjectId: project.id,
-      });
-    }
-
     res.status(201).json({ success: true, data: project });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/* DELETE PROJECT IMAGE */
-exports.deleteProjectImage = async (req, res) => {
+/* GET PROJECTS */
+const getProjects = async (req, res) => {
   try {
-    const image = await ProjectImage.findByPk(req.params.imageId);
-    if (!image) return res.status(404).json({ message: "Image not found" });
-
-    await s3.send(
-      new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_PROJECTS,
-        Key: image.imageUrl,
-      })
-    );
-
-    await image.destroy();
-    res.json({ success: true });
+    const projects = await Project.findAll({ include: ProjectImage });
+    res.json(projects);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+/* UPDATE PROJECT */
+const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    await project.update(req.body);
+    res.json({ success: true, message: "Project updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* DELETE PROJECT */
+const deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    await project.destroy();
+    res.json({ success: true, message: "Project deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* DELETE PROJECT IMAGE */
+const deleteProjectImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    const image = await ProjectImage.findByPk(imageId);
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    await image.destroy();
+    res.json({ success: true, message: "Image deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  createProject,
+  getProjects,
+  updateProject,
+  deleteProject,
+  deleteProjectImage,
 };

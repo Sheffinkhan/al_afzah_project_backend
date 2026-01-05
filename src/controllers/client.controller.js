@@ -1,50 +1,80 @@
-const { Client } = require("../models");
-const s3 = require("../config/s3");
-const { PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
-const { v4: uuid } = require("uuid");
+const { Client, ClientImage } = require("../models");
 
 /* CREATE CLIENT */
-exports.createClient = async (req, res) => {
+const createClient = async (req, res) => {
   try {
-    const fileName = `${uuid()}-${req.file.originalname}`;
-
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
-        Key: fileName,
-        Body: req.file.buffer,
-        ContentType: req.file.mimetype,
-      })
-    );
-
-    const client = await Client.create({
-      name: req.body.name,
-      description: req.body.description,
-      logoUrl: fileName,
-    });
-
+    const client = await Client.create(req.body);
     res.status(201).json({ success: true, data: client });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/* DELETE CLIENT */
-exports.deleteClient = async (req, res) => {
+/* GET CLIENTS */
+const getClients = async (req, res) => {
   try {
-    const client = await Client.findByPk(req.params.id);
-    if (!client) return res.status(404).json({ message: "Client not found" });
-
-    await s3.send(
-      new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
-        Key: client.logoUrl,
-      })
-    );
-
-    await client.destroy();
-    res.json({ success: true });
+    const clients = await Client.findAll({ include: ClientImage });
+    res.json(clients);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+/* UPDATE CLIENT */
+const updateClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await Client.findByPk(id);
+
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    await client.update(req.body);
+    res.json({ success: true, message: "Client updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* DELETE CLIENT */
+const deleteClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const client = await Client.findByPk(id);
+
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+
+    await client.destroy();
+    res.json({ success: true, message: "Client deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* DELETE CLIENT IMAGE */
+const deleteClientImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    const image = await ClientImage.findByPk(imageId);
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    await image.destroy();
+    res.json({ success: true, message: "Image deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  createClient,
+  getClients,
+  updateClient,
+  deleteClient,
+  deleteClientImage,
 };
