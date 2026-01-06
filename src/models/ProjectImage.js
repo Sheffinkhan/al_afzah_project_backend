@@ -5,6 +5,10 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    ProjectId: {               // 👈 MATCH DB
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     imageUrl: DataTypes.STRING,
   });
 };
