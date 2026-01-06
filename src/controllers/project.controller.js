@@ -20,8 +20,8 @@ const createProject = async (req, res) => {
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
-          ACL: "public-read",
         }).promise();
+
 
         await ProjectImage.create({
           projectId: project.id,
