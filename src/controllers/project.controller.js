@@ -16,11 +16,12 @@ const createProject = async (req, res) => {
         const key = `projects/${project.id}/${uuid()}-${file.originalname}`;
 
         const upload = await s3.upload({
-          Bucket: process.env.AWS_S3_BUCKET_PROJECTS,
+          Bucket: process.env.AWS_S3_BUCKET,
           Key: key,
           Body: file.buffer,
-          ContentType: file.mimetype,
+          ContentType: file.mimetype
         }).promise();
+
 
 
         await ProjectImage.create({

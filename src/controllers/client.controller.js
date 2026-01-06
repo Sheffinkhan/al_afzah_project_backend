@@ -12,12 +12,12 @@ const createClient = async (req, res) => {
     const key = `clients/${uuid()}-${req.file.originalname}`;
 
     const upload = await s3.upload({
-      Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+      Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      ACL: "public-read",
+      Body: file.buffer,
+      ContentType: file.mimetype
     }).promise();
+
 
     const client = await Client.create({
       name: req.body.name,
