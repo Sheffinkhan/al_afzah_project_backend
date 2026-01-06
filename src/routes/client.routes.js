@@ -1,9 +1,10 @@
 const router = require("express").Router();
-const clientController = require("../controllers/client.controller");
+const upload = require("../middlewares/upload");
+const controller = require("../controllers/client.controller");
 
-router.post("/clients", clientController.createClient);
-router.get("/clients", clientController.getClients);
-router.put("/clients/:id", clientController.updateClient);
-router.delete("/clients/:id", clientController.deleteClient);
+router.post("/", upload.single("image"), controller.createClient);
+router.get("/", controller.getClients);
+router.put("/:id", upload.single("image"), controller.updateClient);
+router.delete("/:id", controller.deleteClient);
 
 module.exports = router;

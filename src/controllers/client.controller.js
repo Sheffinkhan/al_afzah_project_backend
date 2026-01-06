@@ -1,9 +1,29 @@
-const { Client, ClientImage } = require("../models");
+const { Client } = require("../models");
+const s3 = require("../config/s3");
+const { v4: uuid } = require("uuid");
 
-/* CREATE CLIENT */
+/* CREATE CLIENT (1 IMAGE ONLY) */
 const createClient = async (req, res) => {
   try {
-    const client = await Client.create(req.body);
+    if (!req.file) {
+      return res.status(400).json({ message: "Client image is required" });
+    }
+
+    const key = `clients/${uuid()}-${req.file.originalname}`;
+
+    const upload = await s3.upload({
+      Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      ACL: "public-read",
+    }).promise();
+
+    const client = await Client.create({
+      name: req.body.name,
+      imageUrl: upload.Location,
+    });
+
     res.status(201).json({ success: true, data: client });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -13,25 +33,40 @@ const createClient = async (req, res) => {
 /* GET CLIENTS */
 const getClients = async (req, res) => {
   try {
-    const clients = await Client.findAll({ include: ClientImage });
+    const clients = await Client.findAll();
     res.json(clients);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/* UPDATE CLIENT */
+/* UPDATE CLIENT (OPTIONAL IMAGE) */
 const updateClient = async (req, res) => {
   try {
-    const { id } = req.params;
-    const client = await Client.findByPk(id);
+    const client = await Client.findByPk(req.params.id);
+    if (!client) return res.status(404).json({ message: "Client not found" });
 
-    if (!client) {
-      return res.status(404).json({ message: "Client not found" });
+    let imageUrl = client.imageUrl;
+
+    if (req.file) {
+      const key = `clients/${uuid()}-${req.file.originalname}`;
+      const upload = await s3.upload({
+        Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+        Key: key,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        ACL: "public-read",
+      }).promise();
+
+      imageUrl = upload.Location;
     }
 
-    await client.update(req.body);
-    res.json({ success: true, message: "Client updated" });
+    await client.update({
+      name: req.body.name || client.name,
+      imageUrl,
+    });
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -40,32 +75,18 @@ const updateClient = async (req, res) => {
 /* DELETE CLIENT */
 const deleteClient = async (req, res) => {
   try {
-    const { id } = req.params;
-    const client = await Client.findByPk(id);
+    const client = await Client.findByPk(req.params.id);
+    if (!client) return res.status(404).json({ message: "Client not found" });
 
-    if (!client) {
-      return res.status(404).json({ message: "Client not found" });
-    }
+    const key = client.imageUrl.split(".amazonaws.com/")[1];
+
+    await s3.deleteObject({
+      Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+      Key: key,
+    }).promise();
 
     await client.destroy();
-    res.json({ success: true, message: "Client deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/* DELETE CLIENT IMAGE */
-const deleteClientImage = async (req, res) => {
-  try {
-    const { imageId } = req.params;
-    const image = await ClientImage.findByPk(imageId);
-
-    if (!image) {
-      return res.status(404).json({ message: "Image not found" });
-    }
-
-    await image.destroy();
-    res.json({ success: true, message: "Image deleted" });
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -76,5 +97,4 @@ module.exports = {
   getClients,
   updateClient,
   deleteClient,
-  deleteClientImage,
 };

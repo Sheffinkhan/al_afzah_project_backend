@@ -1,32 +1,10 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
+const upload = require("../middlewares/upload");
+const controller = require("../controllers/project.controller");
 
-const {
-  createProject,
-  getProjects,
-  updateProject,
-  deleteProject,
-  deleteProjectImage,
-} = require("../controllers/project.controller");
-
-/* TEST ROUTE */
-router.get("/test", (req, res) => {
-  res.json({ ok: true, message: "Projects route working" });
-});
-
-/* CREATE PROJECT */
-router.post("/", createProject);
-
-/* GET ALL PROJECTS */
-router.get("/", getProjects);
-
-/* UPDATE PROJECT */
-router.put("/:id", updateProject);
-
-/* DELETE PROJECT */
-router.delete("/:id", deleteProject);
-
-/* DELETE PROJECT IMAGE */
-router.delete("/image/:imageId", deleteProjectImage);
+router.post("/", upload.array("images", 10), controller.createProject);
+router.get("/", controller.getProjects);
+router.put("/:id", controller.updateProject);
+router.delete("/:id", controller.deleteProject);
 
 module.exports = router;
