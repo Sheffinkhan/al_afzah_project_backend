@@ -7,7 +7,6 @@ const { v4: uuid } = require("uuid");
 ============================ */
 const createClient = async (req, res) => {
   try {
-    // ✅ multer puts file here
     if (!req.file) {
       return res.status(400).json({ message: "Client image is required" });
     }
@@ -18,17 +17,20 @@ const createClient = async (req, res) => {
       .upload({
         Bucket: process.env.AWS_S3_BUCKET,
         Key: key,
-        Body: req.file.buffer,          // ✅ FIX
+        Body: req.file.buffer,
         ContentType: req.file.mimetype,
       })
       .promise();
 
     const client = await Client.create({
       name: req.body.name,
-      imageUrl: uploadResult.Location,
+      logoUrl: uploadResult.Location, // ✅ CORRECT FIELD
     });
 
-    res.status(201).json({ success: true, data: client });
+    res.status(201).json({
+      success: true,
+      data: client,
+    });
   } catch (err) {
     console.error("CREATE CLIENT ERROR:", err);
     res.status(500).json({ error: err.message });
@@ -45,6 +47,7 @@ const getClients = async (req, res) => {
     });
     res.json(clients);
   } catch (err) {
+    console.error("GET CLIENTS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -59,7 +62,7 @@ const updateClient = async (req, res) => {
       return res.status(404).json({ message: "Client not found" });
     }
 
-    let imageUrl = client.imageUrl;
+    let logoUrl = client.logoUrl;
 
     if (req.file) {
       const key = `clients/${uuid()}-${req.file.originalname}`;
@@ -73,12 +76,12 @@ const updateClient = async (req, res) => {
         })
         .promise();
 
-      imageUrl = uploadResult.Location;
+      logoUrl = uploadResult.Location;
     }
 
     await client.update({
       name: req.body.name ?? client.name,
-      imageUrl,
+      logoUrl, // ✅ CORRECT FIELD
     });
 
     res.json({ success: true });
@@ -98,7 +101,8 @@ const deleteClient = async (req, res) => {
       return res.status(404).json({ message: "Client not found" });
     }
 
-    const key = client.imageUrl.split(".amazonaws.com/")[1];
+    // Delete image from S3
+    const key = client.logoUrl.split(".amazonaws.com/")[1];
 
     await s3
       .deleteObject({
@@ -108,6 +112,7 @@ const deleteClient = async (req, res) => {
       .promise();
 
     await client.destroy();
+
     res.json({ success: true });
   } catch (err) {
     console.error("DELETE CLIENT ERROR:", err);

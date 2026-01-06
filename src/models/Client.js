@@ -6,7 +6,6 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },
     name: DataTypes.STRING,
-    description: DataTypes.TEXT,
-    logoUrl: DataTypes.STRING,
+    logoUrl: DataTypes.STRING, // ✅ THIS IS THE FIELD
   });
 };
