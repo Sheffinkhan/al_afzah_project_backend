@@ -51,7 +51,7 @@ const updateClient = async (req, res) => {
     if (req.file) {
       const key = `clients/${uuid()}-${req.file.originalname}`;
       const upload = await s3.upload({
-        Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+        Bucket: process.env.AWS_S3_BUCKET,
         Key: key,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
@@ -81,7 +81,7 @@ const deleteClient = async (req, res) => {
     const key = client.imageUrl.split(".amazonaws.com/")[1];
 
     await s3.deleteObject({
-      Bucket: process.env.AWS_S3_BUCKET_CLIENTS,
+      Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
     }).promise();
 

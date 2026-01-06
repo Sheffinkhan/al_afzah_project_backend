@@ -70,7 +70,7 @@ const deleteProject = async (req, res) => {
   for (const img of project.ProjectImages) {
     const key = img.imageUrl.split(".amazonaws.com/")[1];
     await s3.deleteObject({
-      Bucket: process.env.AWS_S3_BUCKET_PROJECTS,
+      Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
     }).promise();
   }
