@@ -6,13 +6,13 @@ const ProjectImage = require("./ProjectImage")(sequelize, DataTypes);
 const Client = require("./Client")(sequelize, DataTypes);
 
 Project.hasMany(ProjectImage, {
-  foreignKey: "projectId",
+  foreignKey: "ProjectId",
   as: "images",
   onDelete: "CASCADE",
 });
 
 ProjectImage.belongsTo(Project, {
-  foreignKey: "projectId",
+  foreignKey: "ProjectId",
 });
 
 
