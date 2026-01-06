@@ -5,7 +5,15 @@ const Project = require("./Project")(sequelize, DataTypes);
 const ProjectImage = require("./ProjectImage")(sequelize, DataTypes);
 const Client = require("./Client")(sequelize, DataTypes);
 
-Project.hasMany(ProjectImage, { onDelete: "CASCADE" });
-ProjectImage.belongsTo(Project);
+Project.hasMany(ProjectImage, {
+  foreignKey: "projectId",
+  as: "images",
+  onDelete: "CASCADE",
+});
+
+ProjectImage.belongsTo(Project, {
+  foreignKey: "projectId",
+});
+
 
 module.exports = { sequelize, Project, ProjectImage, Client };
