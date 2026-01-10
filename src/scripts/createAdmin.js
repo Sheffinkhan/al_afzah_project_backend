@@ -1,6 +1,6 @@
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
-const { sequelize, Admin } = require("../src/models");
+const { sequelize, Admin } = require("../models");
 
 (async () => {
   await sequelize.sync();
