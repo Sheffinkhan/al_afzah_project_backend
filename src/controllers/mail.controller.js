@@ -4,13 +4,22 @@ const sendContactMail = async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
 
+    if (!name || !email || !message) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // TLS
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS, // App password
       },
+      connectionTimeout: 10_000, 
     });
+
+    await transporter.verify(); 
 
     await transporter.sendMail({
       from: `"Website Contact" <${process.env.MAIL_USER}>`,
@@ -18,7 +27,7 @@ const sendContactMail = async (req, res) => {
       replyTo: email,
       subject: "New Contact Message",
       html: `
-        <h3>New Contact Message</h3>
+        <h3>New Message</h3>
         <p><b>Name:</b> ${name}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Phone:</b> ${phone}</p>
