@@ -10,16 +10,16 @@ const sendContactMail = async (req, res) => {
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // TLS
+      port: 465,          // ✅ IMPORTANT
+      secure: true,       // ✅ SSL
       auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS, // App password
+        pass: process.env.MAIL_PASS,
       },
-      connectionTimeout: 10_000, 
+      connectionTimeout: 10_000,
     });
 
-    await transporter.verify(); 
+    await transporter.verify(); // will fail fast if blocked
 
     await transporter.sendMail({
       from: `"Website Contact" <${process.env.MAIL_USER}>`,
@@ -27,7 +27,7 @@ const sendContactMail = async (req, res) => {
       replyTo: email,
       subject: "New Contact Message",
       html: `
-        <h3>New Message</h3>
+        <h3>New Contact Message</h3>
         <p><b>Name:</b> ${name}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Phone:</b> ${phone}</p>
