@@ -12,6 +12,8 @@ app.use("/api/projects", require("./routes/project.routes"));
 app.use("/api/clients", require("./routes/client.routes"));
 app.use("/api/banners", require("./routes/banner.routes"));
 app.use("/api/mail", require("./routes/mail.routes"));
+app.use("/api/admin", require("./routes/admin.routes"));
+
 
 
 module.exports = app;
