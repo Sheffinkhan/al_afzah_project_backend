@@ -10,5 +10,6 @@ app.use(express.json());
 // ✅ THIS LINE IS CRITICAL
 app.use("/api/projects", require("./routes/project.routes"));
 app.use("/api/clients", require("./routes/client.routes"));
+app.use("/api/banners", require("./routes/banner.routes"));
 
 module.exports = app;
