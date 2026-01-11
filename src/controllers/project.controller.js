@@ -1,6 +1,7 @@
 const { Project, ProjectImage } = require("../models");
 const s3 = require("../config/s3");
 const { v4: uuid } = require("uuid");
+const { validate: isUUID } = require("uuid");
 
 /* ============================
    CREATE PROJECT (MAX 10 IMAGES)
@@ -86,7 +87,14 @@ const getProjects = async (req, res) => {
 ============================ */
 const updateProject = async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id);
+    const { id } = req.params;
+
+    // ✅ UUID validation
+    if (!id || !isUUID(id)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    const project = await Project.findByPk(id);
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -99,19 +107,27 @@ const updateProject = async (req, res) => {
       completedDate: req.body.completedDate ?? project.completedDate,
     });
 
-    res.json({ success: true });
+    res.json({ success: true, data: project });
   } catch (err) {
     console.error("UPDATE PROJECT ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
+
 /* ============================
    DELETE PROJECT + S3 IMAGES
 ============================ */
 const deleteProject = async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id, {
+    const { id } = req.params;
+
+    // ✅ UUID validation
+    if (!id || !isUUID(id)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    const project = await Project.findByPk(id, {
       include: {
         model: ProjectImage,
         as: "images",
@@ -122,7 +138,6 @@ const deleteProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // 1️⃣ Delete images from S3
     for (const img of project.images) {
       const key = img.imageUrl.split(".amazonaws.com/")[1];
 
@@ -134,7 +149,6 @@ const deleteProject = async (req, res) => {
         .promise();
     }
 
-    // 2️⃣ Delete project (CASCADE deletes images)
     await project.destroy();
 
     res.json({ success: true });
@@ -143,6 +157,7 @@ const deleteProject = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 module.exports = {
   createProject,

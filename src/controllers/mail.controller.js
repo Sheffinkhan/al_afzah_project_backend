@@ -9,14 +9,16 @@ const sendContactMail = async (req, res) => {
     }
 
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,          // ✅ IMPORTANT
-      secure: true,       // ✅ SSL
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
       },
-      connectionTimeout: 10_000,
+      tls: {
+        ciphers: "SSLv3",
+      },
     });
 
     await transporter.verify(); // will fail fast if blocked
