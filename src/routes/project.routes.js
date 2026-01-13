@@ -9,5 +9,12 @@ router.get("/", controller.getProjects);
 router.put("/:id", upload.none(), controller.updateProject);
 
 router.delete("/:id", controller.deleteProject);
+// routes/project.routes.js
+router.put(
+  "/:projectId/image/:imageId",
+  upload.single("image"),
+  controller.updateProjectImage
+);
+
 
 module.exports = router;

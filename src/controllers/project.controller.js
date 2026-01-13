@@ -158,10 +158,58 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const updateProjectImage = async (req, res) => {
+  try {
+    const { projectId, imageId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Image file required" });
+    }
+
+    const image = await ProjectImage.findByPk(imageId);
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // 🔥 Delete old image from S3
+    const oldKey = image.imageUrl.split(".amazonaws.com/")[1];
+
+    await s3.deleteObject({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: oldKey,
+    }).promise();
+
+    // 🚀 Upload new image
+    const newKey = `projects/${projectId}/${uuid()}-${req.file.originalname}`;
+
+    const upload = await s3.upload({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: newKey,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    }).promise();
+
+    // 💾 Update DB
+    image.imageUrl = upload.Location;
+    await image.save();
+
+    res.json({
+      success: true,
+      data: image,
+    });
+  } catch (err) {
+    console.error("UPDATE PROJECT IMAGE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 
 module.exports = {
   createProject,
   getProjects,
   updateProject,
   deleteProject,
+  updateProjectImage,
 };
