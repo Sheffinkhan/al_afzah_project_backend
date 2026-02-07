@@ -5,8 +5,7 @@ const controller = require("../controllers/project.controller");
 router.post("/", upload.array("images", 10), controller.createProject);
 router.get("/", controller.getProjects);
 
-// ✅ THIS LINE FIXES YOUR ERROR
-router.put("/:id", upload.none(), controller.updateProject);
+router.put("/:id", upload.array("images", 10), controller.updateProject);
 
 router.delete("/:id", controller.deleteProject);
 // routes/project.routes.js

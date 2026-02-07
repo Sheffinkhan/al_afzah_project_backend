@@ -89,7 +89,7 @@ const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ✅ UUID validation
+    // Validate UUID
     if (!id || !isUUID(id)) {
       return res.status(400).json({ message: "Invalid project ID" });
     }
@@ -100,6 +100,7 @@ const updateProject = async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    // 1️⃣ Update text fields
     await project.update({
       title: req.body.title ?? project.title,
       description: req.body.description ?? project.description,
@@ -107,7 +108,41 @@ const updateProject = async (req, res) => {
       completedDate: req.body.completedDate ?? project.completedDate,
     });
 
-    res.json({ success: true, data: project });
+    // 2️⃣ Upload new images (if any)
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const key = `projects/${id}/${uuid()}-${file.originalname}`;
+
+        const uploadResult = await s3
+          .upload({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+          .promise();
+
+        // Save image in DB
+        await ProjectImage.create({
+          ProjectId: id,
+          imageUrl: uploadResult.Location,
+        });
+      }
+    }
+
+    // 3️⃣ Return updated project with images
+    const result = await Project.findByPk(id, {
+      include: {
+        model: ProjectImage,
+        as: "images",
+      },
+    });
+
+    res.json({
+      success: true,
+      data: result,
+    });
+
   } catch (err) {
     console.error("UPDATE PROJECT ERROR:", err);
     res.status(500).json({ error: err.message });
