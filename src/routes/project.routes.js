@@ -15,5 +15,10 @@ router.put(
   controller.updateProjectImage
 );
 
+router.delete(
+  "/image/:imageId",
+  controller.deleteProjectImage
+);
+
 
 module.exports = router;

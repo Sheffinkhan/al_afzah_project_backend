@@ -239,6 +239,39 @@ const updateProjectImage = async (req, res) => {
   }
 };
 
+const deleteProjectImage = async (req, res) => {
+  try {
+    const { imageId } = req.params;
+
+    if (!imageId) {
+      return res.status(400).json({ message: "Image ID required" });
+    }
+
+    const image = await ProjectImage.findByPk(imageId);
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const key = image.imageUrl.split(".amazonaws.com/")[1];
+
+    await s3.deleteObject({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+    }).promise();
+
+    await image.destroy();
+
+    res.json({
+      success: true,
+      message: "Image deleted successfully",
+    });
+  } catch (err) {
+    console.error("DELETE PROJECT IMAGE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 
 module.exports = {
@@ -247,4 +280,5 @@ module.exports = {
   updateProject,
   deleteProject,
   updateProjectImage,
+  deleteProjectImage,
 };
