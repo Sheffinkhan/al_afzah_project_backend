@@ -9,21 +9,23 @@ const sendContactMail = async (req, res) => {
     }
 
     const transporter = nodemailer.createTransport({
-      service: "gmail", 
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.MAIL_USER, // your gmail
-        pass: process.env.MAIL_PASS, // Gmail App Password
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
     });
 
     await transporter.verify();
 
-await transporter.sendMail({
-  from: `"Website Contact" <${process.env.MAIL_USER}>`,
-  to: process.env.MAIL_USER,
-  replyTo: email,
-  subject: "New Contact Message",
-  html: `
+    await transporter.sendMail({
+      from: `"Website Contact" <${process.env.MAIL_USER}>`,
+      to: process.env.MAIL_USER,
+      replyTo: email,
+      subject: "New Contact Message",
+      html: `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;padding:30px">
     <table width="100%" align="center" style="max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
       
@@ -62,7 +64,7 @@ await transporter.sendMail({
     </table>
   </div>
   `,
-});
+    });
 
     res.json({ success: true });
   } catch (err) {
