@@ -7,6 +7,9 @@ const sendContactMail = async (req, res) => {
     if (!name || !email || !message) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+console.log("MAIL_USER =", process.env.MAIL_USER);
+console.log("MAIL_PASS_LENGTH =", process.env.MAIL_PASS?.length);
+
 
     const transporter = nodemailer.createTransport({
       host: "smtp.office365.com",
